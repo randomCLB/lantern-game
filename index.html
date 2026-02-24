@@ -692,10 +692,16 @@
             document.getElementById('quizScreen').style.display = 'block';
             
             let startIdx = 0;
-            if (gameState.hongbaoCount >= 20) {
-                startIdx = 60;
+            let difficultyName = "简单";
+            if (gameState.hongbaoCount >= 30) {
+                startIdx = 150;
+                difficultyName = "专家";
+            } else if (gameState.hongbaoCount >= 20) {
+                startIdx = 100;
+                difficultyName = "困难";
             } else if (gameState.hongbaoCount >= 10) {
-                startIdx = 30;
+                startIdx = 50;
+                difficultyName = "中等";
             }
             
             gameState.selectedQuizzes = [];
