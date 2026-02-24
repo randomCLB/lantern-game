@@ -169,7 +169,7 @@
         #quizNumber {
             color: #4a9eff;
             font-size: 18px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             text-align: center;
         }
         
@@ -177,20 +177,28 @@
             display: inline-block;
             background: linear-gradient(45deg, #6b5ce7, #4a9eff);
             color: #fff;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 16px;
-            margin-bottom: 15px;
+            padding: 6px 16px;
+            border-radius: 15px;
+            font-size: 14px;
+            margin-bottom: 12px;
             font-weight: bold;
         }
         
         #quizText {
             color: #fff;
-            font-size: 24px;
+            font-size: 22px;
             line-height: 1.6;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
             text-align: center;
-            min-height: 80px;
+            min-height: 70px;
+        }
+        
+        #answerLength {
+            color: #ffd700;
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
         }
         
         #timerBar {
@@ -214,15 +222,40 @@
             padding: 15px;
             font-size: 20px;
             background: rgba(255,255,255,0.1);
-            border: 2px solid #4a9eff;
+            border: 3px solid #4a9eff;
             border-radius: 10px;
             margin-bottom: 15px;
             text-align: center;
             color: #fff;
+            transition: all 0.3s;
         }
         
         #answerInput::placeholder {
             color: #888;
+        }
+        
+        /* 答题框状态颜色 */
+        #answerInput.wrong {
+            border-color: #ff4444;
+            background: rgba(255,68,68,0.2);
+            animation: shake 0.5s;
+        }
+        
+        #answerInput.hint {
+            border-color: #ffd700;
+            background: rgba(255,215,0,0.15);
+            box-shadow: 0 0 15px rgba(255,215,0,0.4);
+        }
+        
+        #answerInput.correct {
+            border-color: #00ff00;
+            background: rgba(0,255,0,0.15);
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
         }
         
         #submitAnswer {
@@ -248,34 +281,41 @@
             min-height: 60px;
         }
         
-        /* 引导提示 - 醒目但不直白 */
+        /* 引导提示框 - 更醒目 */
         #hintBox {
             display: none;
             margin-top: 15px;
-            padding: 15px;
-            background: linear-gradient(135deg, rgba(107,92,231,0.3), rgba(74,158,255,0.3));
-            border: 2px solid #6b5ce7;
-            border-radius: 10px;
+            padding: 18px;
+            background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,170,0,0.2));
+            border: 3px solid #ffd700;
+            border-radius: 12px;
             text-align: center;
-            animation: pulse 2s infinite;
+            animation: pulseHint 1.5s infinite;
+            box-shadow: 0 0 20px rgba(255,215,0,0.3);
         }
         
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(107,92,231,0.5); }
-            50% { box-shadow: 0 0 20px rgba(107,92,231,0.8); }
+        @keyframes pulseHint {
+            0%, 100% { 
+                box-shadow: 0 0 15px rgba(255,215,0,0.4);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 30px rgba(255,215,0,0.7);
+                transform: scale(1.02);
+            }
         }
         
         #hintLabel {
             color: #ffd700;
-            font-size: 14px;
-            margin-bottom: 5px;
+            font-size: 16px;
+            margin-bottom: 8px;
             font-weight: bold;
         }
         
         #hintText {
             color: #fff;
             font-size: 18px;
-            font-style: italic;
+            line-height: 1.5;
         }
         
         .correct {
@@ -380,12 +420,15 @@
         <div id="quizScreen">
             <div id="quizCard">
                 <div id="quizNumber">第 1 / 5 题</div>
-                <div style="text-align: center;"><span id="answerType">天文·2个字</span></div>
+                <div style="text-align: center;"><span id="answerType">天文</span></div>
                 <div id="timerBar"><div id="timerProgress"></div></div>
                 <div id="quizText">加载中...</div>
+                <div id="answerLength">答案：2个字</div>
+                
                 <input type="text" id="answerInput" placeholder="请输入答案" maxlength="20">
                 <button id="submitAnswer" onclick="checkAnswer()">提交答案</button>
                 <div id="quizResult"></div>
+                
                 <div id="hintBox">
                     <div id="hintLabel">💡 知识引导</div>
                     <div id="hintText"></div>
@@ -415,109 +458,121 @@
             hongbaoInterval: null,
             timerInterval: null,
             quizTimer: null,
-            selectedQuizzes: []
+            selectedQuizzes: [],
+            hintShown: false
         };
 
-        // 100道天文地理知识题
+        // 100道天文地理知识题（带别名）
         const quizzes = [
             // 天文类 - 太阳系
-            { q: "太阳系中最大的行星是？", a: "木星", type: "天文·2个字", hint: "这颗行星比地球大300多倍，有著名的大红斑" },
-            { q: "太阳系中离太阳最近的行星是？", a: "水星", type: "天文·2个字", hint: "中国古代称为'辰星'，公转速度最快" },
-            { q: "太阳系中唯一有生命存在的行星是？", a: "地球", type: "天文·2个字", hint: "我们脚下的这颗蓝色星球" },
-            { q: "太阳系中被称为'红色星球'的是？", a: "火星", type: "天文·2个字", hint: "因表面氧化铁而呈红色，人类探索的重点目标" },
-            { q: "太阳系中拥有最多卫星的行星是？", a: "土星", type: "天文·2个字", hint: "拥有美丽的光环，卫星数量超过80颗" },
-            { q: "太阳系中最热的行星是？", a: "金星", type: "天文·2个字", hint: "表面温度可达462°C，比水星还热" },
-            { q: "太阳系中最冷的行星是？", a: "海王星", type: "天文·3个字", hint: "距离太阳最远的冰巨星" },
-            { q: "太阳系中唯一逆向自转的行星是？", a: "金星", type: "天文·2个字", hint: "太阳从西边升起，东边落下" },
-            { q: "太阳系中自转最快的行星是？", a: "木星", type: "天文·2个字", hint: "一天只有约10小时" },
-            { q: "太阳系中自转最慢的行星是？", a: "金星", type: "天文·2个字", hint: "一天比一年还长" },
+            { q: "太阳系中最大的行星是？", a: ["木星"], len: "2个字", type: "天文", hint: "这颗行星比地球大300多倍，有著名的大红斑" },
+            { q: "太阳系中离太阳最近的行星是？", a: ["水星"], len: "2个字", type: "天文", hint: "中国古代称为'辰星'，公转速度最快" },
+            { q: "太阳系中唯一有生命存在的行星是？", a: ["地球"], len: "2个字", type: "天文", hint: "我们脚下的这颗蓝色星球" },
+            { q: "太阳系中被称为'红色星球'的是？", a: ["火星"], len: "2个字", type: "天文", hint: "因表面氧化铁而呈红色，人类探索的重点目标" },
+            { q: "太阳系中拥有最多卫星的行星是？", a: ["土星"], len: "2个字", type: "天文", hint: "拥有美丽的光环，卫星数量超过80颗" },
+            { q: "太阳系中最热的行星是？", a: ["金星"], len: "2个字", type: "天文", hint: "表面温度可达462°C，比水星还热" },
+            { q: "太阳系中最冷的行星是？", a: ["海王星"], len: "3个字", type: "天文", hint: "距离太阳最远的冰巨星" },
+            { q: "太阳系中唯一逆向自转的行星是？", a: ["金星"], len: "2个字", type: "天文", hint: "太阳从西边升起，东边落下" },
+            { q: "太阳系中自转最快的行星是？", a: ["木星"], len: "2个字", type: "天文", hint: "一天只有约10小时" },
+            { q: "太阳系中自转最慢的行星是？", a: ["金星"], len: "2个字", type: "天文", hint: "一天比一年还长" },
             
             // 天文类 - 恒星与星座
-            { q: "距离地球最近的恒星是？", a: "太阳", type: "天文·2个字", hint: "它提供了地球上所有的光和热" },
-            { q: "夜空中最亮的恒星是？", a: "天狼星", type: "天文·3个字", hint: "位于大犬座，冬季夜空中最亮" },
-            { q: "北斗七星属于哪个星座？", a: "大熊座", type: "天文·3个字", hint: "一个巨大的熊形星座" },
-            { q: "北极星属于哪个星座？", a: "小熊座", type: "天文·3个字", hint: "小熊的尾巴尖上" },
-            { q: "夏季大三角由哪三颗星组成？（回答最亮的一颗）", a: "织女星", type: "天文·3个字", hint: "牛郎织女故事中的女主角" },
-            { q: "猎户座腰带上的三颗星被称为什么？", a: "参宿三星", type: "天文·4个字", hint: "福禄寿三星高照" },
-            { q: "银河系大约有多少颗恒星？（回答数量级）", a: "千亿", type: "天文·2个字", hint: "1000亿到4000亿之间" },
-            { q: "光从太阳到地球需要多长时间？", a: "8分钟", type: "天文·3个字", hint: "光速约30万公里/秒" },
-            { q: "一年中太阳直射点最北到达哪里？", a: "北回归线", type: "地理·4个字", hint: "北纬23.5度" },
-            { q: "日食发生时，月亮位于什么位置？", a: "中间", type: "天文·2个字", hint: "太阳、月亮、地球三者的位置关系" },
+            { q: "距离地球最近的恒星是？", a: ["太阳"], len: "2个字", type: "天文", hint: "它提供了地球上所有的光和热" },
+            { q: "夜空中最亮的恒星是？", a: ["天狼星"], len: "3个字", type: "天文", hint: "位于大犬座，冬季夜空中最亮" },
+            { q: "北斗七星属于哪个星座？", a: ["大熊座"], len: "3个字", type: "天文", hint: "一个巨大的熊形星座" },
+            { q: "北极星属于哪个星座？", a: ["小熊座"], len: "3个字", type: "天文", hint: "小熊的尾巴尖上" },
+            { q: "夏季大三角由织女星、牛郎星和哪颗星组成？", a: ["天津四"], len: "3个字", type: "天文", hint: "天鹅座最亮的恒星" },
+            { q: "猎户座腰带上的三颗星被称为什么？", a: ["参宿三星", "福禄寿"], len: "4个字", type: "天文", hint: "福禄寿三星高照" },
+            { q: "银河系大约有多少颗恒星？（回答数量级）", a: ["千亿", "一千亿", "几千亿"], len: "2个字", type: "天文", hint: "1000亿到4000亿之间" },
+            { q: "光从太阳到地球需要多长时间？", a: ["8分钟", "八分钟", "8分"], len: "3个字", type: "天文", hint: "光速约30万公里/秒" },
+            { q: "一年中太阳直射点最北到达哪里？", a: ["北回归线", "北回归"], len: "4个字", type: "地理", hint: "北纬23.5度" },
+            { q: "日食发生时，月亮位于什么位置？", a: ["中间", "太阳地球中间"], len: "2个字", type: "天文", hint: "太阳、月亮、地球三者的位置关系" },
             
             // 地理类 - 地球与地形
-            { q: "地球表面约有多少百分比被水覆盖？", a: "71", type: "地理·数字", hint: "约七成是海洋" },
-            { q: "地球上最深的海沟是？", a: "马里亚纳海沟", type: "地理·6个字", hint: "位于太平洋，深度超过11000米" },
-            { q: "地球上最高的山峰是？", a: "珠穆朗玛峰", type: "地理·5个字", hint: "海拔8848.86米，位于喜马拉雅山脉" },
-            { q: "世界上最大的沙漠是？", a: "撒哈拉沙漠", type: "地理·5个字", hint: "位于非洲北部" },
-            { q: "世界上最大的平原是？", a: "亚马逊平原", type: "地理·5个字", hint: "位于南美洲，热带雨林气候" },
-            { q: "世界上最大的半岛是？", a: "阿拉伯半岛", type: "地理·5个字", hint: "位于亚洲西南部" },
-            { q: "世界上最大的岛屿是？", a: "格陵兰岛", type: "地理·4个字", hint: "位于北美洲东北部，大部分被冰覆盖" },
-            { q: "世界上最长的河流是？", a: "尼罗河", type: "地理·3个字", hint: "位于非洲，长约6650公里" },
-            { q: "世界上流量最大的河流是？", a: "亚马逊河", type: "地理·4个字", hint: "位于南美洲，流量占全球20%" },
-            { q: "世界上最大的淡水湖是？", a: "苏必利尔湖", type: "地理·5个字", hint: "位于北美五大湖区" },
+            { q: "地球表面约有多少百分比被水覆盖？", a: ["71", "百分之71", "71%"], len: "数字", type: "地理", hint: "约七成是海洋" },
+            { q: "地球上最深的海沟是？", a: ["马里亚纳海沟", "马里亚纳"], len: "6个字", type: "地理", hint: "位于太平洋，深度超过11000米" },
+            { q: "地球上最高的山峰是？", a: ["珠穆朗玛峰", "珠峰"], len: "5个字", type: "地理", hint: "海拔8848.86米，位于喜马拉雅山脉" },
+            { q: "世界上最大的沙漠是？", a: ["撒哈拉沙漠", "撒哈拉"], len: "5个字", type: "地理", hint: "位于非洲北部" },
+            { q: "世界上最大的平原是？", a: ["亚马逊平原", "亚马孙平原"], len: "5个字", type: "地理", hint: "位于南美洲，热带雨林气候" },
+            { q: "世界上最大的半岛是？", a: ["阿拉伯半岛", "阿拉伯"], len: "5个字", type: "地理", hint: "位于亚洲西南部" },
+            { q: "世界上最大的岛屿是？", a: ["格陵兰岛", "格陵兰"], len: "4个字", type: "地理", hint: "位于北美洲东北部，大部分被冰覆盖" },
+            { q: "世界上最长的河流是？", a: ["尼罗河"], len: "3个字", type: "地理", hint: "位于非洲，长约6650公里" },
+            { q: "世界上流量最大的河流是？", a: ["亚马逊河", "亚马孙河"], len: "4个字", type: "地理", hint: "位于南美洲，流量占全球20%" },
+            { q: "世界上最大的淡水湖是？", a: ["苏必利尔湖"], len: "5个字", type: "地理", hint: "位于北美五大湖区" },
             
-            // 地理类 - 国家与城市
-            { q: "世界上面积最大的国家是？", a: "俄罗斯", type: "地理·3个字", hint: "横跨欧亚大陆，面积约1700万平方公里" },
-            { q: "世界上人口最多的国家是？", a: "印度", type: "地理·2个字", hint: "2023年人口超过中国" },
-            { q: "世界上面积最小的国家是？", a: "梵蒂冈", type: "地理·3个字", hint: "位于意大利罗马城内" },
-            { q: "世界上最高的首都是？", a: "拉巴斯", type: "地理·3个字", hint: "玻利维亚首都，海拔约3640米" },
-            { q: "赤道穿过的非洲国家有哪些？（回答一个）", a: "肯尼亚", type: "地理·3个字", hint: "东非国家，以野生动物闻名" },
-            { q: "世界上跨经度最多的国家是？", a: "俄罗斯", type: "地理·3个字", hint: "横跨11个时区" },
-            { q: "世界上跨纬度最多的国家是？", a: "中国", type: "地理·2个字", hint: "从热带到寒温带" },
-            { q: "地中海沿岸的国家有哪些？（回答一个）", a: "意大利", type: "地理·3个字", hint: "靴子形状的国家" },
-            { q: "世界上最北的首都是？", a: "雷克雅未克", type: "地理·5个字", hint: "冰岛首都，靠近北极圈" },
-            { q: "世界上最南的首都是？", a: "惠灵顿", type: "地理·3个字", hint: "新西兰首都" },
+            // 地理类 - 国家与城市（带别名）
+            { q: "世界上面积最大的国家是？", a: ["俄罗斯"], len: "3个字", type: "地理", hint: "横跨欧亚大陆，面积约1700万平方公里" },
+            { q: "世界上人口最多的国家是？", a: ["印度", "中国"], len: "2个字", type: "地理", hint: "2023年人口超过14亿" },
+            { q: "世界上面积最小的国家是？", a: ["梵蒂冈", "梵蒂冈城国"], len: "3个字", type: "地理", hint: "位于意大利罗马城内" },
+            { q: "澳大利亚的首都是？", a: ["堪培拉"], len: "3个字", type: "地理", hint: "不是悉尼也不是墨尔本" },
+            { q: "澳大利亚最大的城市是？", a: ["悉尼", "雪梨"], len: "2个字", type: "地理", hint: "有著名的歌剧院" },
+            { q: "美国最大的城市是？", a: ["纽约"], len: "2个字", type: "地理", hint: "自由女神像所在地" },
+            { q: "美国的首都是？", a: ["华盛顿", "华盛顿特区"], len: "3个字", type: "地理", hint: "不是纽约" },
+            { q: "英国的首都是？", a: ["伦敦"], len: "2个字", type: "地理", hint: "大本钟和泰晤士河" },
+            { q: "法国的首都是？", a: ["巴黎"], len: "2个字", type: "地理", hint: "埃菲尔铁塔所在地" },
+            { q: "日本的首都是？", a: ["东京"], len: "2个字", type: "地理", hint: "樱花和富士山" },
+            
+            // 更多国家和地理
+            { q: "世界上最北的首都是？", a: ["雷克雅未克"], len: "5个字", type: "地理", hint: "冰岛首都，靠近北极圈" },
+            { q: "世界上最南的首都是？", a: ["惠灵顿"], len: "3个字", type: "地理", hint: "新西兰首都" },
+            { q: "世界上最小的洲是？", a: ["大洋洲", "澳洲"], len: "3个字", type: "地理", hint: "澳大利亚所在的大洲" },
+            { q: "世界上最长的山脉是？", a: ["安第斯山脉", "安第斯"], len: "5个字", type: "地理", hint: "位于南美洲，长约8900公里" },
+            { q: "世界上最大的珊瑚礁系统是？", a: ["大堡礁"], len: "3个字", type: "地理", hint: "位于澳大利亚东北海岸" },
+            { q: "世界上最深的湖泊是？", a: ["贝加尔湖", "贝加尔"], len: "4个字", type: "地理", hint: "位于俄罗斯，最深处1642米" },
+            { q: "世界上最大的高原是？", a: ["巴西高原"], len: "4个字", type: "地理", hint: "位于南美洲" },
+            { q: "世界上最大的盆地是？", a: ["刚果盆地", "刚果"], len: "4个字", type: "地理", hint: "位于非洲中部" },
+            { q: "世界上最大的三角洲是？", a: ["恒河三角洲", "恒河"], len: "5个字", type: "地理", hint: "位于孟加拉国和印度" },
+            { q: "世界上最大的海峡是？", a: ["德雷克海峡", "德雷克"], len: "5个字", type: "地理", hint: "位于南美洲和南极洲之间" },
             
             // 自然现象
-            { q: "彩虹的七种颜色按顺序是什么？（回答第一种）", a: "红", type: "自然·1个字", hint: "赤橙黄绿青蓝紫的第一个" },
-            { q: "极光通常出现在地球的什么地方？", a: "两极", type: "地理·2个字", hint: "南极和北极地区" },
-            { q: "台风和飓风本质上是同一种现象，区别是什么？", a: "地点", type: "地理·2个字", hint: "发生的海域不同" },
-            { q: "地球上最大的洋是？", a: "太平洋", type: "地理·3个字", hint: "面积占地球海洋的一半" },
-            { q: "地球上最小的大洋是？", a: "北冰洋", type: "地理·3个字", hint: "位于北极地区" },
-            { q: "地球上最大的洲是？", a: "亚洲", type: "地理·2个字", hint: "面积约占全球陆地30%" },
-            { q: "地球上最小的洲是？", a: "大洋洲", type: "地理·3个字", hint: "澳大利亚所在的大洲" },
-            { q: "地球上最长的山脉是？", a: "安第斯山脉", type: "地理·5个字", hint: "位于南美洲，长约8900公里" },
-            { q: "地球上最大的峡谷是？", a: "雅鲁藏布大峡谷", type: "地理·7个字", hint: "位于中国西藏" },
-            { q: "地球上最大的珊瑚礁系统是？", a: "大堡礁", type: "地理·3个字", hint: "位于澳大利亚东北海岸" },
+            { q: "彩虹的七种颜色按顺序是什么？（回答第一种）", a: ["红"], len: "1个字", type: "自然", hint: "赤橙黄绿青蓝紫的第一个" },
+            { q: "极光通常出现在地球的什么地方？", a: ["两极", "南极北极", "极地"], len: "2个字", type: "地理", hint: "南极和北极地区" },
+            { q: "地球上最大的洋是？", a: ["太平洋"], len: "3个字", type: "地理", hint: "面积占地球海洋的一半" },
+            { q: "地球上最小的大洋是？", a: ["北冰洋"], len: "3个字", type: "地理", hint: "位于北极地区" },
+            { q: "地球上最大的洲是？", a: ["亚洲"], len: "2个字", type: "地理", hint: "面积约占全球陆地30%" },
+            { q: "地球上最长的山脉是？", a: ["安第斯山脉", "安第斯"], len: "5个字", type: "地理", hint: "位于南美洲" },
+            { q: "百慕大三角位于哪个大洋？", a: ["大西洋", "大西洋的百慕大"], len: "3个字", type: "地理", hint: "北美洲附近" },
+            { q: "地球上最大的峡谷是？", a: ["雅鲁藏布大峡谷", "雅鲁藏布"], len: "7个字", type: "地理", hint: "位于中国西藏" },
+            { q: "世界上最大的海湾是？", a: ["孟加拉湾", "孟加拉"], len: "4个字", type: "地理", hint: "位于印度洋东北部" },
+            { q: "世界上最大的内海是？", a: ["地中海"], len: "3个字", type: "地理", hint: "位于欧洲、非洲、亚洲之间" },
             
             // 天文进阶
-            { q: "黑洞的边界被称为什么？", a: "事件视界", type: "天文·4个字", hint: "光也无法逃逸的边界" },
-            { q: "宇宙大爆炸理论认为宇宙起源于多少年前？", a: "138亿年", type: "天文·4个字", hint: "约138亿年前" },
-            { q: "月球绕地球公转一周大约需要多少天？", a: "27.3", type: "天文·数字", hint: "约27天半" },
-            { q: "地球公转一周形成什么？", a: "一年", type: "天文·2个字", hint: "四季更替的周期" },
-            { q: "地球自转一周形成什么？", a: "一天", type: "天文·2个字", hint: "昼夜交替的周期" },
-            { q: "春分点和秋分点时，昼夜长短如何？", a: "相等", type: "天文·2个字", hint: "昼夜平分" },
-            { q: "夏至时，北半球白天最长还是夜晚最长？", a: "白天", type: "天文·2个字", hint: "北极圈内出现极昼" },
-            { q: "冬至时，南半球是什么季节？", a: "夏季", type: "天文·2个字", hint: "南北半球季节相反" },
-            { q: "彗星的主要成分是什么？", a: "冰", type: "天文·1个字", hint: "脏雪球理论" },
-            { q: "小行星带位于哪两颗行星之间？", a: "火星木星", type: "天文·4个字", hint: "类地行星和巨行星之间" },
+            { q: "黑洞的边界被称为什么？", a: ["事件视界"], len: "4个字", type: "天文", hint: "光也无法逃逸的边界" },
+            { q: "宇宙大爆炸理论认为宇宙起源于多少年前？", a: ["138亿年", "138亿", "一百三十八亿"], len: "4个字", type: "天文", hint: "约138亿年前" },
+            { q: "月球绕地球公转一周大约需要多少天？", a: ["27.3", "27", "27天"], len: "数字", type: "天文", hint: "约27天半" },
+            { q: "地球公转一周形成什么？", a: ["一年", "1年"], len: "2个字", type: "天文", hint: "四季更替的周期" },
+            { q: "地球自转一周形成什么？", a: ["一天", "1天"], len: "2个字", type: "天文", hint: "昼夜交替的周期" },
+            { q: "春分点和秋分点时，昼夜长短如何？", a: ["相等", "一样长", "等长"], len: "2个字", type: "天文", hint: "昼夜平分" },
+            { q: "夏至时，北半球白天最长还是夜晚最长？", a: ["白天", "白昼"], len: "2个字", type: "天文", hint: "北极圈内出现极昼" },
+            { q: "冬至时，南半球是什么季节？", a: ["夏季", "夏天"], len: "2个字", type: "天文", hint: "南北半球季节相反" },
+            { q: "彗星的主要成分是什么？", a: ["冰", "冰雪", "冰块"], len: "1个字", type: "天文", hint: "脏雪球理论" },
+            { q: "小行星带位于哪两颗行星之间？", a: ["火星木星", "火星和木星", "木星火星"], len: "4个字", type: "天文", hint: "类地行星和巨行星之间" },
             
             // 地理进阶
-            { q: "板块构造学说中，地球表层被分成几大板块？", a: "7", type: "地理·数字", hint: "七大板块" },
-            { q: "环太平洋地带被称为什么？", a: "火环", type: "地理·2个字", hint: "地震火山多发带" },
-            { q: "世界上最活跃的火山是？", a: "埃特纳火山", type: "地理·5个字", hint: "位于意大利西西里岛" },
-            { q: "世界上最深的湖泊是？", a: "贝加尔湖", type: "地理·4个字", hint: "位于俄罗斯，最深处1642米" },
-            { q: "世界上最大的高原是？", a: "巴西高原", type: "地理·4个字", hint: "位于南美洲" },
-            { q: "世界上最大的盆地是？", a: "刚果盆地", type: "地理·4个字", hint: "位于非洲中部" },
-            { q: "世界上最大的三角洲是？", a: "恒河三角洲", type: "地理·5个字", hint: "位于孟加拉国和印度" },
-            { q: "世界上最大的海峡是？", a: "德雷克海峡", type: "地理·5个字", hint: "位于南美洲和南极洲之间" },
-            { q: "世界上最大的海湾是？", a: "孟加拉湾", type: "地理·4个字", hint: "位于印度洋东北部" },
-            { q: "世界上最大的内海是？", a: "地中海", type: "地理·3个字", hint: "位于欧洲、非洲、亚洲之间" },
+            { q: "板块构造学说中，地球表层被分成几大板块？", a: ["7", "七", "七大"], len: "数字", type: "地理", hint: "七大板块" },
+            { q: "环太平洋地带被称为什么？", a: ["火环", "环太平洋火环"], len: "2个字", type: "地理", hint: "地震火山多发带" },
+            { q: "世界上最活跃的火山是？", a: ["埃特纳火山", "埃特纳"], len: "5个字", type: "地理", hint: "位于意大利西西里岛" },
+            { q: "世界上最大的三角洲是？", a: ["恒河三角洲", "恒河"], len: "5个字", type: "地理", hint: "位于孟加拉国和印度" },
+            { q: "世界上最大的海峡是？", a: ["德雷克海峡", "德雷克"], len: "5个字", type: "地理", hint: "位于南美洲和南极洲之间" },
+            { q: "世界上最大的内海是？", a: ["地中海"], len: "3个字", type: "地理", hint: "位于欧洲、非洲、亚洲之间" },
+            { q: "中国最大的沙漠是？", a: ["塔克拉玛干沙漠", "塔克拉玛干"], len: "7个字", type: "地理", hint: "位于新疆，被称为'死亡之海'" },
+            { q: "中国最大的盆地是？", a: ["塔里木盆地", "塔里木"], len: "5个字", type: "地理", hint: "位于新疆南部" },
+            { q: "中国最大的平原是？", a: ["东北平原"], len: "4个字", type: "地理", hint: "由三江平原、松嫩平原、辽河平原组成" },
+            { q: "中国最大的高原是？", a: ["青藏高原"], len: "4个字", type: "地理", hint: "世界屋脊" },
             
             // 中国地理
-            { q: "中国最长的河流是？", a: "长江", type: "地理·2个字", hint: "全长约6300公里" },
-            { q: "中国第二长河是？", a: "黄河", type: "地理·2个字", hint: "中华民族的母亲河" },
-            { q: "中国最大的湖泊是？", a: "青海湖", type: "地理·3个字", hint: "位于青海省，是咸水湖" },
-            { q: "中国最大的岛屿是？", a: "台湾岛", type: "地理·3个字", hint: "位于东南沿海" },
-            { q: "中国最大的沙漠是？", a: "塔克拉玛干沙漠", type: "地理·7个字", hint: "位于新疆，被称为'死亡之海'" },
-            { q: "中国最高的山峰是？", a: "珠穆朗玛峰", type: "地理·5个字", hint: "位于西藏与尼泊尔边境" },
-            { q: "中国最大的盆地是？", a: "塔里木盆地", type: "地理·5个字", hint: "位于新疆南部" },
-            { q: "中国最大的平原是？", a: "东北平原", type: "地理·4个字", hint: "由三江平原、松嫩平原、辽河平原组成" },
-            { q: "中国最大的高原是？", a: "青藏高原", type: "地理·4个字", hint: "世界屋脊" },
-            { q: "中国陆地面积最大的省级行政区是？", a: "新疆", type: "地理·2个字", hint: "约占全国陆地面积的1/6" }
+            { q: "中国最长的河流是？", a: ["长江"], len: "2个字", type: "地理", hint: "全长约6300公里" },
+            { q: "中国第二长河是？", a: ["黄河"], len: "2个字", type: "地理", hint: "中华民族的母亲河" },
+            { q: "中国最大的湖泊是？", a: ["青海湖"], len: "3个字", type: "地理", hint: "位于青海省，是咸水湖" },
+            { q: "中国最大的岛屿是？", a: ["台湾岛", "台湾"], len: "3个字", type: "地理", hint: "位于东南沿海" },
+            { q: "中国陆地面积最大的省级行政区是？", a: ["新疆", "新疆维吾尔自治区"], len: "2个字", type: "地理", hint: "约占全国陆地面积的1/6" },
+            { q: "中国人口最多的省份是？", a: ["广东", "广东省"], len: "2个字", type: "地理", hint: "位于南方沿海" },
+            { q: "中国的首都是？", a: ["北京", "北京市"], len: "2个字", type: "地理", hint: "故宫和天安门所在地" },
+            { q: "中国最大的城市是？", a: ["上海", "上海市"], len: "2个字", type: "地理", hint: "东方明珠所在地" },
+            { q: "香港回归祖国是哪一年？", a: ["1997", "1997年"], len: "数字", type: "地理", hint: "20世纪最后几年" },
+            { q: "澳门回归祖国是哪一年？", a: ["1999", "1999年"], len: "数字", type: "地理", hint: "香港回归后两年" }
         ];
 
-        // 鼓励词
         const encouragements = {
             0: { text: "知识需要积累，再接再厉！", fireworks: 1 },
             1: { text: "不错，至少答对了一题！", fireworks: 2 },
@@ -636,12 +691,11 @@
         function startQuizPhase(count) {
             document.getElementById('quizScreen').style.display = 'block';
             
-            // 根据红包数量选择难度
             let startIdx = 0;
             if (gameState.hongbaoCount >= 20) {
-                startIdx = 60; // 困难
+                startIdx = 60;
             } else if (gameState.hongbaoCount >= 10) {
-                startIdx = 30; // 中等
+                startIdx = 30;
             }
             
             gameState.selectedQuizzes = [];
@@ -671,7 +725,13 @@
                 `第 ${gameState.currentQuiz + 1} / ${gameState.selectedQuizzes.length} 题`;
             document.getElementById('answerType').textContent = q.type;
             document.getElementById('quizText').textContent = q.q;
-            document.getElementById('answerInput').value = '';
+            document.getElementById('answerLength').textContent = `答案：${q.len}`;
+            
+            const input = document.getElementById('answerInput');
+            input.value = '';
+            input.className = '';
+            input.placeholder = '请输入答案';
+            
             document.getElementById('quizResult').textContent = '';
             document.getElementById('quizResult').className = '';
             document.getElementById('hintBox').style.display = 'none';
@@ -679,13 +739,14 @@
             document.getElementById('quizProgress').textContent = 
                 `${gameState.currentQuiz}/${gameState.selectedQuizzes.length}`;
             
+            gameState.hintShown = false;
             startQuizTimer();
         }
 
         function startQuizTimer() {
             let timeLeft = 20;
-            let hintShown = false;
             const q = gameState.selectedQuizzes[gameState.currentQuiz];
+            const input = document.getElementById('answerInput');
             
             clearInterval(gameState.quizTimer);
             
@@ -695,9 +756,10 @@
                 const progress = (timeLeft / 20) * 100;
                 document.getElementById('timerProgress').style.width = progress + '%';
                 
-                // 10秒时显示引导提示
-                if (timeLeft === 10 && !hintShown) {
-                    hintShown = true;
+                // 10秒时显示引导提示，输入框变黄
+                if (timeLeft === 10 && !gameState.hintShown) {
+                    gameState.hintShown = true;
+                    input.classList.add('hint');
                     document.getElementById('hintBox').style.display = 'block';
                     document.getElementById('hintText').textContent = q.hint;
                 }
@@ -711,46 +773,42 @@
 
         function timeUp(q) {
             const resultDiv = document.getElementById('quizResult');
-            resultDiv.textContent = `⏰ 时间到！答案是：${q.a}`;
+            resultDiv.textContent = `⏰ 时间到！答案是：${q.a[0]}`;
             resultDiv.className = 'timeout';
             document.getElementById('hintBox').style.display = 'none';
             
             setTimeout(() => {
                 gameState.currentQuiz++;
                 showQuiz();
-            }, 8000);
+            }, 6000);
         }
 
         function checkAnswer() {
-            const input = document.getElementById('answerInput').value.trim();
-            if (!input) return;
+            const input = document.getElementById('answerInput');
+            const inputVal = input.value.trim();
+            if (!inputVal) return;
             
             const q = gameState.selectedQuizzes[gameState.currentQuiz];
             const resultDiv = document.getElementById('quizResult');
             
-            // 前10秒不显示错误提示
-            const timeLeft = parseInt(document.getElementById('timerProgress').style.width) / 5;
-            if (timeLeft > 10) {
-                // 检查是否正确
-                const correct = q.a.includes(input) || input.includes(q.a) || 
-                               similarity(input, q.a) > 0.7;
-                
-                if (!correct) {
-                    // 前10秒打错不提示，清空输入继续
-                    document.getElementById('answerInput').value = '';
-                    document.getElementById('answerInput').placeholder = '再想想...';
-                    return;
+            // 检查所有可能的正确答案
+            let correct = false;
+            for (let ans of q.a) {
+                if (inputVal.includes(ans) || ans.includes(inputVal) || 
+                    similarity(inputVal, ans) > 0.8) {
+                    correct = true;
+                    break;
                 }
             }
             
-            clearInterval(gameState.quizTimer);
-            
-            const correct = q.a.includes(input) || input.includes(q.a) || 
-                           similarity(input, q.a) > 0.7;
-            
             if (correct) {
+                clearInterval(gameState.quizTimer);
+                input.classList.remove('wrong', 'hint');
+                input.classList.add('correct');
+                
                 resultDiv.textContent = '🎉 回答正确！+50分';
                 resultDiv.className = 'correct';
+                
                 gameState.correctQuizzes++;
                 gameState.score += 50;
                 updateDisplay();
@@ -760,17 +818,29 @@
                 setTimeout(() => {
                     gameState.currentQuiz++;
                     showQuiz();
-                }, 3000);
+                }, 2500);
             } else {
-                resultDiv.textContent = '❌ 答案不对，继续思考...';
+                // 打错变红并抖动
+                input.classList.remove('hint');
+                input.classList.add('wrong');
+                input.value = '';
+                input.placeholder = '再想想...';
+                
+                resultDiv.textContent = '❌ 答案不对';
                 resultDiv.className = 'wrong';
-                document.getElementById('answerInput').value = '';
+                
+                // 如果已经显示提示了，保持提示可见
+                if (gameState.hintShown) {
+                    setTimeout(() => {
+                        resultDiv.textContent = '';
+                    }, 1000);
+                }
             }
         }
 
         function similarity(s1, s2) {
-            s1 = s1.toLowerCase();
-            s2 = s2.toLowerCase();
+            s1 = s1.toLowerCase().replace(/[\s·]/g, '');
+            s2 = s2.toLowerCase().replace(/[\s·]/g, '');
             if (s1 === s2) return 1;
             let match = 0;
             for (let c of s1) {
