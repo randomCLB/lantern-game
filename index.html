@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏮 马年元宵灯谜会 🧧</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* 游戏容器 */
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+        }
+        
+        /* 顶部信息栏 */
+        #topBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            border-bottom: 2px solid #ffd700;
+        }
+        
+        .stat {
+            color: #ffd700;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .stat span {
+            color: #fff;
+            margin-left: 5px;
+        }
+        
+        /* 开始界面 */
+        #startScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        #startScreen h1 {
+            color: #ffd700;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #ffd700;
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px #ffd700, 0 0 40px #ff6b6b; }
+            50% { text-shadow: 0 0 30px #ffd700, 0 0 60px #ff6b6b; }
+        }
+        
+        #startScreen p {
+            color: #fff;
+            font-size: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.8;
+        }
+        
+        .btn {
+            padding: 15px 50px;
+            font-size: 24px;
+            background: linear-gradient(45deg, #ff6b6b, #ffd700);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(255,107,107,0.4);
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(255,107,107,0.6);
+        }
+        
+        /* 红包 */
+        .hongbao {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            box-shadow: 0 5px 15px rgba(255,0,0,0.4);
+            animation: fall linear;
+            z-index: 100;
+        }
+        
+        .hongbao::before {
+            content: "🧧";
+        }
+        
+        .hongbao.gold {
+            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+            box-shadow: 0 5px 15px rgba(255,215,0,0.6);
+        }
+        
+        @keyframes fall {
+            from { transform: translateY(-100px) rotate(0deg); }
+            to { transform: translateY(100vh) rotate(360deg); }
+        }
+        
+        /* 灯谜界面 */
+        #riddleScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1500;
+            padding: 100px 20px 20px;
+        }
+        
+        #riddleCard {
+            max-width: 600px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #fff8dc 0%, #ffe4b5 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(255,215,0,0.3);
+            border: 3px solid #ffd700;
+        }
+        
+        #riddleNumber {
+            color: #cc0000;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        #riddleText {
+            color: #333;
+            font-size: 28px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        #answerInput {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #submitAnswer {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #ffd700);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+        }
+        
+        #riddleResult {
+            margin-top: 20px;
+            font-size: 20px;
+            text-align: center;
+            min-height: 30px;
+        }
+        
+        .correct {
+            color: #00aa00;
+        }
+        
+        .wrong {
+            color: #cc0000;
+        }
+        
+        /* 烟花画布 */
+        #fireworksCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3000;
+        }
+        
+        /* 游戏结束界面 */
+        #gameOver {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameOver h2 {
+            color: #ffd700;
+            font-size: 48px;
+            margin-bottom: 30px;
+        }
+        
+        #finalScore {
+            color: #fff;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        #rank {
+            color: #ff6b6b;
+            font-size: 28px;
+            margin-bottom: 40px;
+        }
+        
+        /* 提示 */
+        #hint {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        /* 倒计时 */
+        #countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            color: #ffd700;
+            z-index: 2500;
+            display: none;
+            text-shadow: 0 0 30px #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- 顶部信息栏 -->
+        <div id="topBar">
+            <div class="stat">🧧 红包: <span id="hongbaoCount">0</span></div>
+            <div class="stat">⏱️ 时间: <span id="timeLeft">30</span>s</div>
+            <div class="stat">🎯 得分: <span id="score">0</span></div>
+            <div class="stat">🏮 灯谜: <span id="riddleProgress">0/10</span></div>
+        </div>
+        
+        <!-- 倒计时 -->
+        <div id="countdown"></div>
+        
+        <!-- 开始界面 -->
+        <div id="startScreen">
+            <h1>🏮 马年元宵灯谜会 🧧</h1>
+            <p>
+                点击掉落的红包，抢得越多越好！<br>
+                红包越多，灯谜难度越高！<br>
+                答对灯谜放电子烟花庆祝！
+            </p>
+            <button class="btn" onclick="startGame()">开始游戏</button>
+        </div>
+        
+        <!-- 灯谜界面 -->
+        <div id="riddleScreen">
+            <div id="riddleCard">
+                <div id="riddleNumber">第 1 题</div>
+                <div id="riddleText">加载中...</div>
+                <input type="text" id="answerInput" placeholder="请输入答案" maxlength="10">
+                <button id="submitAnswer" onclick="checkAnswer()">提交答案</button>
+                <div id="riddleResult"></div>
+                <div id="hint"></div>
+            </div>
+        </div>
+        
+        <!-- 游戏结束 -->
+        <div id="gameOver">
+            <h2>🎉 游戏结束 🎉</h2>
+            <div id="finalScore"></div>
+            <div id="rank"></div>
+            <button class="btn" onclick="location.reload()">再玩一次</button>
+        </div>
+        
+        <!-- 烟花画布 -->
+        <canvas id="fireworksCanvas"></canvas>
+    </div>
+
+    <script>
+        // 游戏状态
+        let gameState = {
+            hongbaoCount: 0,
+            score: 0,
+            timeLeft: 30,
+            currentRiddle: 0,
+            correctRiddles: 0,
+            isPlaying: false,
+            hongbaoInterval: null,
+            timerInterval: null
+        };
+
+        // 50个灯谜题库（按难度分组）
+        const riddles = [
+            // 简单难度 (1-15)
+            { q: "一口咬掉牛尾巴 (打一字)", a: "告", hint: "牛字下面加口" },
+            { q: "七十二小时 (打一字)", a: "晶", hint: "三日" },
+            { q: "需要一半，留下一半 (打一字)", a: "雷", hint: "需的一半，留的一半" },
+            { q: "一月一日非今天 (打一字)", a: "明", hint: "日+月" },
+            { q: "守门员 (打一字)", a: "闪", hint: "门里有个人" },
+            { q: "有人偷车 (打一字)", a: "输", hint: "车+人" },
+            { q: "半青半紫 (打一字)", a: "素", hint: "青的一半+紫的一半" },
+            { q: "身残心不残 (打一字)", a: "息", hint: "身+心" },
+            { q: "千里挑一，百里挑一 (打一字)", a: "伯", hint: "千-一，百-一" },
+            { q: "一口吃掉牛尾巴 (打一字)", a: "告", hint: "牛+口" },
+            { q: "山上还有山 (打一字)", a: "出", hint: "两个山" },
+            { q: "十张口，一颗心 (打一字)", a: "思", hint: "十+口+心" },
+            { q: "一只黑狗，不叫不吼 (打一字)", a: "默", hint: "黑+犬" },
+            { q: "差一点六斤 (打一字)", a: "兵", hint: "斤+六差一点" },
+            { q: "家中添一口 (打一字)", a: "豪", hint: "家+一+口" },
+            
+            // 中等难度 (16-35)
+            { q: "四方来合作，贡献大一点 (打一字)", a: "器", hint: "四个口+大" },
+            { q: "种花要除草，一人来一粒 (打一字)", a: "化", hint: "花-草+人" },
+            { q: "存心不善，有口难言 (打一字)", a: "亚", hint: "恶-心，哑-口" },
+            { q: "二小姐 (打一字)", a: "姿", hint: "次女" },
+            { q: "挥手告别 (打一字)", a: "军", hint: "挥-手" },
+            { q: "一来再来 (打一字)", a: "冉", hint: "再-一+一" },
+            { q: "千里通电话 (打一成语)", a: "遥相呼应", hint: "远距离回应" },
+            { q: "举重比赛 (打一成语)", a: "斤斤计较", hint: "计较重量" },
+            { q: "全面开荒 (打一成语)", a: "不留余地", hint: "全部开垦" },
+            { q: "聊斋志异 (打一成语)", a: "鬼话连篇", hint: "书的内容" },
+            { q: "盲人摸象 (打一成语)", a: "不识大体", hint: "不了解整体" },
+            { q: "蜜饯黄连 (打一成语)", a: "同甘共苦", hint: "甜和苦一起" },
+            { q: "会计 (打一成语)", a: "足智多谋", hint: "计算谋划" },
+            { q: "逆水划船 (打一成语)", a: "力争上游", hint: "努力向上" },
+            { q: "快刀斩乱麻 (打一成语)", a: "迎刃而解", hint: "顺利解决" },
+            { q: "翘翘板 (打一成语)", a: "此起彼落", hint: "一上一下" },
+            { q: "遇事不求人 (打一成语)", a: "自力更生", hint: "自己解决" },
+            { q: "脱粒机 (打一成语)", a: "吞吞吐吐", hint: "吞吐谷物" },
+            { q: "四通八达 (打一成语)", a: "头头是道", hint: "道路多" },
+            { q: "元宵同返家 (打一成语)", a: "众望所归", hint: "节日回家" },
+            
+            // 困难难度 (36-50)
+            { q: "元宵前后共团圆 (打一字)", a: "期", hint: "元宵=正月+五，前后=月+其" },
+            { q: "十五天 (打一字)", a: "胖", hint: "半月+半月" },
+            { q: "左有十八，右有十八 (打一字)", a: "林", hint: "十八=木" },
+            { q: "天没它大，人有它大 (打一字)", a: "一", hint: "天-一=大，人+一=大" },
+            { q: "打断念头 (打一字)", a: "心", hint: "念-头" },
+            { q: "十两多一点 (打一字)", a: "斥", hint: "十两=斤，+丶" },
+            { q: "秀才翘尾巴 (打一字)", a: "秃", hint: "秀+乚" },
+            { q: "一撇划了三寸长 (打一字)", a: "寿", hint: "三+寸+丿" },
+            { q: "一个礼拜 (打一成语)", a: "七日来复", hint: "七天周期" },
+            { q: "皇 (打一成语)", a: "白玉无瑕", hint: "皇=白+王" },
+            { q: "超级好牙刷 (打一成语)", a: "一毛不拔", hint: "刷不掉毛" },
+            { q: "猫狗像什么 (打一成语)", a: "如狼似虎", hint: "像猛兽" },
+            { q: "电锯开木头 (打一成语)", a: "当机立断", hint: "立即断开" },
+            { q: "空对空导弹 (打一成语)", a: "见机行事", hint: "看见飞机行动" },
+            { q: "元宵灯火已阑珊 (打一谦辞礼貌用语)", a: "望多关照", hint: "灯火阑珊=关照" }
+        ];
+
+        // 开始游戏
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            gameState.isPlaying = true;
+            
+            // 倒计时3秒
+            showCountdown(3, () => {
+                startHongbaoRain();
+                startTimer();
+            });
+        }
+
+        // 显示倒计时
+        function showCountdown(seconds, callback) {
+            const cd = document.getElementById('countdown');
+            cd.style.display = 'block';
+            cd.textContent = seconds;
+            
+            const interval = setInterval(() => {
+                seconds--;
+                if (seconds > 0) {
+                    cd.textContent = seconds;
+                } else {
+                    clearInterval(interval);
+                    cd.style.display = 'none';
+                    callback();
+                }
+            }, 1000);
+        }
+
+        // 红包雨
+        function startHongbaoRain() {
+            let batchCount = 0;
+            const maxBatches = 10;
+            
+            gameState.hongbaoInterval = setInterval(() => {
+                if (batchCount >= maxBatches) {
+                    clearInterval(gameState.hongbaoInterval);
+                    return;
+                }
+                
+                // 每批掉落3-5个红包
+                const count = 3 + Math.floor(Math.random() * 3);
+                for (let i = 0; i < count; i++) {
+                    setTimeout(() => createHongbao(), i * 200);
+                }
+                batchCount++;
+            }, 2000);
+        }
+
+        // 创建红包
+        function createHongbao() {
+            const hb = document.createElement('div');
+            hb.className = 'hongbao';
+            
+            // 10%概率出现金色红包（双倍积分）
+            if (Math.random() < 0.1) {
+                hb.classList.add('gold');
+            }
+            
+            // 随机位置
+            hb.style.left = Math.random() * (window.innerWidth - 60) + 'px';
+            
+            // 随机下落时间
+            const duration = 3 + Math.random() * 2;
+            hb.style.animationDuration = duration + 's';
+            
+            // 点击事件
+            hb.addEventListener('click', (e) => {
+                e.stopPropagation();
+                catchHongbao(hb);
+            });
+            
+            // 自动移除
+            hb.addEventListener('animationend', () => {
+                hb.remove();
+            });
+            
+            document.getElementById('gameContainer').appendChild(hb);
+        }
+
+        // 抢到红包
+        function catchHongbao(hb) {
+            const isGold = hb.classList.contains('gold');
+            const points = isGold ? 2 : 1;
+            
+            gameState.hongbaoCount += points;
+            gameState.score += points * 10;
+            
+            updateDisplay();
+            
+            // 点击效果
+            hb.style.transform = 'scale(1.5)';
+            hb.style.opacity = '0';
+            setTimeout(() => hb.remove(), 200);
+        }
+
+        // 计时器
+        function startTimer() {
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                updateDisplay();
+                
+                if (gameState.timeLeft <= 0) {
+                    endHongbaoPhase();
+                }
+            }, 1000);
+        }
+
+        // 结束抢红包阶段，进入灯谜阶段
+        function endHongbaoPhase() {
+            clearInterval(gameState.timerInterval);
+            clearInterval(gameState.hongbaoInterval);
+            gameState.isPlaying = false;
+            
+            // 清除剩余红包
+            document.querySelectorAll('.hongbao').forEach(hb => hb.remove());
+            
+            // 根据红包数量决定灯谜数量
+            const riddleCount = Math.min(10, Math.max(3, Math.floor(gameState.hongbaoCount / 2)));
+            startRiddlePhase(riddleCount);
+        }
+
+        // 灯谜阶段
+        function startRiddlePhase(count) {
+            document.getElementById('riddleScreen').style.display = 'block';
+            
+            // 根据红包数量选择难度
+            let startIdx = 0;
+            if (gameState.hongbaoCount >= 15) {
+                startIdx = 35; // 困难难度
+            } else if (gameState.hongbaoCount >= 8) {
+                startIdx = 15; // 中等难度
+            }
+            
+            // 随机选择灯谜
+            gameState.selectedRiddles = [];
+            const available = riddles.slice(startIdx, startIdx + 20);
+            for (let i = 0; i < count; i++) {
+                const idx = Math.floor(Math.random() * available.length);
+                gameState.selectedRiddles.push(available[idx]);
+                available.splice(idx, 1);
+            }
+            
+            gameState.currentRiddle = 0;
+            showRiddle();
+        }
+
+        // 显示灯谜
+        function showRiddle() {
+            const r = gameState.selectedRiddles[gameState.currentRiddle];
+            document.getElementById('riddleNumber').textContent = 
+                `第 ${gameState.currentRiddle + 1} / ${gameState.selectedRiddles.length} 题`;
+            document.getElementById('riddleText').textContent = r.q;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('riddleResult').textContent = '';
+            document.getElementById('hint').textContent = '';
+            document.getElementById('riddleProgress').textContent = 
+                `${gameState.currentRiddle}/${gameState.selectedRiddles.length}`;
+        }
+
+        // 检查答案
+        function checkAnswer() {
+            const input = document.getElementById('answerInput').value.trim();
+            const r = gameState.selectedRiddles[gameState.currentRiddle];
+            const resultDiv = document.getElementById('riddleResult');
+            
+            if (!input) {
+                resultDiv.textContent = '请输入答案！';
+                resultDiv.className = 'wrong';
+                return;
+            }
+            
+            // 模糊匹配
+            const correct = r.a.includes(input) || input.includes(r.a) || 
+                           similarity(input, r.a) > 0.8;
+            
+            if (correct) {
+                resultDiv.textContent = '🎉 回答正确！';
+                resultDiv.className = 'correct';
+                gameState.correctRiddles++;
+                gameState.score += 50;
+                updateDisplay();
+                
+                // 放烟花！
+                launchFireworks();
+                
+                // 下一题
+                setTimeout(() => {
+                    gameState.currentRiddle++;
+                    if (gameState.currentRiddle < gameState.selectedRiddles.length) {
+                        showRiddle();
+                    } else {
+                        endGame();
+                    }
+                }, 2000);
+            } else {
+                resultDiv.textContent = '❌ 答案不对，再想想！';
+                resultDiv.className = 'wrong';
+                document.getElementById('hint').textContent = `提示：${r.hint}`;
+            }
+        }
+
+        // 字符串相似度
+        function similarity(s1, s2) {
+            s1 = s1.toLowerCase();
+            s2 = s2.toLowerCase();
+            let match = 0;
+            for (let c of s1) {
+                if (s2.includes(c)) match++;
+            }
+            return match / Math.max(s1.length, s2.length);
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            document.getElementById('hongbaoCount').textContent = gameState.hongbaoCount;
+            document.getElementById('timeLeft').textContent = gameState.timeLeft;
+            document.getElementById('score').textContent = gameState.score;
+        }
+
+        // 游戏结束
+        function endGame() {
+            document.getElementById('riddleScreen').style.display = 'none';
+            document.getElementById('gameOver').style.display = 'flex';
+            
+            const finalScore = gameState.score + (gameState.correctRiddles * 100);
+            document.getElementById('finalScore').textContent = 
+                `最终得分: ${finalScore} 分`;
+            
+            let rank = '';
+            if (finalScore >= 800) rank = '🏆 灯谜大师';
+            else if (finalScore >= 500) rank = '🥇 猜谜高手';
+            else if (finalScore >= 300) rank = '🥈 猜谜达人';
+            else rank = '🥉 猜谜新手';
+            
+            document.getElementById('rank').textContent = 
+                `抢到 ${gameState.hongbaoCount} 个红包，答对 ${gameState.correctRiddles} 道灯谜\n${rank}`;
+        }
+
+        // 烟花效果
+        function launchFireworks() {
+            const canvas = document.getElementById('fireworksCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const particles = [];
+            const colors = ['#ff6b6b', '#ffd700', '#ffaa00', '#ff4444', '#ffff00'];
+            
+            // 创建粒子
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10 - 5,
+                    life: 1,
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+            
+            // 动画
+            function animate() {
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                let alive = false;
+                particles.forEach(p => {
+                    if (p.life > 0) {
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.2; // 重力
+                        p.life -= 0.02;
+                        
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                        ctx.fillStyle = p.color;
+                        ctx.globalAlpha = p.life;
+                        ctx.fill();
+                    }
+                });
+                
+                if (alive) {
+                    requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            
+            animate();
+        }
+
+        // 回车提交答案
+        document.getElementById('answerInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+    </script>
+</body>
+</html>
